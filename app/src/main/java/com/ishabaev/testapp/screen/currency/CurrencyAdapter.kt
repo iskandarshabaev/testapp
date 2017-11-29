@@ -1,9 +1,13 @@
-package com.ishabaev.testapp.screen
+package com.ishabaev.testapp.screen.currency
 
+import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.ishabaev.testapp.R
+import com.ishabaev.testapp.model.Currency
+import com.ishabaev.testapp.presenter.currency.MyDiffCallback
+
 
 class CurrencyAdapter(
         private var inflater: LayoutInflater,
@@ -20,9 +24,10 @@ class CurrencyAdapter(
     override fun getItemCount() = items.size
 
     public fun updateDataSet(data: List<Currency>) {
+        val diffResult = DiffUtil.calculateDiff(MyDiffCallback(data, this.items))
         items.clear()
         items.addAll(data)
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
     }
 
 }

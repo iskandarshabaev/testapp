@@ -1,5 +1,5 @@
 package com.ishabaev.testapp.screen
 
-class BasePresenter {
+interface BaseView {
 
 }
