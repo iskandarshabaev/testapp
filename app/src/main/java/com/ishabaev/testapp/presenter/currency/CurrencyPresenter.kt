@@ -1,7 +1,7 @@
 package com.ishabaev.testapp.presenter.currency
 
-import android.util.Log
 import com.ishabaev.testapp.api.API
+import com.ishabaev.testapp.floorTo
 import com.ishabaev.testapp.model.Currency
 import com.ishabaev.testapp.presenter.BasePresenter
 import com.ishabaev.testapp.screen.currency.CurrencyView
@@ -20,9 +20,8 @@ class CurrencyPresenter : BasePresenter<CurrencyView>() {
     fun onResume() {
         disposable = Observable.just(true)
                 .flatMap { API.currencies.loadCurrencies(currentItem.name) }
-                .doOnNext { Log.d("das", it.base) }
                 .map { it.rates }
-                .map { it.toList().map { Currency(it.first, (Math.floor(it.second  * 100.0) / 100).toFloat()) } }
+                .map { it.toList().map { Currency(it.first, it.second.floorTo(3)) } }
                 .map { it.toMutableList() }
                 .applySchedulers()
                 .doOnNext({ handleCurrencies(it) })
