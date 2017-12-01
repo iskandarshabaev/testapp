@@ -1,7 +1,6 @@
 package com.ishabaev.testapp.screen.currency
 
 import android.os.Bundle
-import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -37,18 +36,25 @@ class CurrencyListFragment : BaseFragment<CurrencyView, CurrencyPresenter>(), Cu
     private var isListIdle = true
 
     private fun initViews() {
-        currenciesList.layoutManager = LinearLayoutManager(context)
+        val lagoutManager = LinearLayoutManager(context)
+        currenciesList.layoutManager = lagoutManager
         currenciesList.itemAnimator = null
-        currencyAdapter = CurrencyAdapter(layoutInflater, mutableListOf())
+        currencyAdapter = CurrencyAdapter(currenciesList, layoutInflater, mutableListOf())
         currenciesList.adapter = currencyAdapter
         currenciesList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView?, newState: Int) {
                 isListIdle = RecyclerView.SCROLL_STATE_IDLE == newState
             }
         })
+        currencyAdapter.listener = object : CurrencyAdapter.OnItemSelectedListener {
+            override fun onIemSelected(position: Int, currentItem: Currency) {
+                presenter.changeBase(currentItem)
+                lagoutManager.scrollToPositionWithOffset(0, 0)
+            }
+        }
     }
 
-    override fun updateCurrency(currencies: List<Currency>) {
+    override fun updateCurrency(currencies: MutableList<Currency>) {
         if (isListIdle) {
             currencyAdapter.updateDataSet(currencies)
         }

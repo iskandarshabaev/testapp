@@ -5,6 +5,6 @@ import com.ishabaev.testapp.screen.BaseView
 
 interface CurrencyView: BaseView {
 
-    fun updateCurrency(currencies: List<Currency>)
+    fun updateCurrency(currencies: MutableList<Currency>)
 
 }
