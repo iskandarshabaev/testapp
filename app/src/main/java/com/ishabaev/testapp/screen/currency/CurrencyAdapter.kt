@@ -12,12 +12,13 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.ishabaev.testapp.R
 import com.ishabaev.testapp.floorTo
 import com.ishabaev.testapp.model.Currency
-import com.ishabaev.testapp.presenter.currency.MyDiffCallback
-import com.ishabaev.testapp.utils.applySchedulers
-import io.reactivex.Observable
+import com.ishabaev.testapp.utils.CurrencyNames
+import java.util.*
+
 
 class CurrencyAdapter(
         private var recyclerView: RecyclerView,
@@ -26,6 +27,7 @@ class CurrencyAdapter(
 ) : RecyclerView.Adapter<CurrencyAdapter.BaseCurrencyViewHolder>(), View.OnTouchListener, TextWatcher {
 
     var listener: OnItemSelectedListener? = null
+    val names = CurrencyNames.names(recyclerView.context)
 
     private var currentItem: Currency = Currency("EUR", 1f)
 
@@ -64,46 +66,31 @@ class CurrencyAdapter(
             if (holder.valueView.text.toString() != text) {
                 holder.valueView.setText(text, TextView.BufferType.EDITABLE)
             }
-            removeFocus(holder.valueView)
         } else {
             holder.bind(currentItem, position)
             val text = "${currentItem.value}"
             if (holder.valueView.text.toString() != text) {
                 holder.valueView.setText(text, TextView.BufferType.EDITABLE)
             }
-            addFocus(holder.valueView)
             holder.valueView.setSelection(holder.valueView.text.length)
         }
     }
 
-    private fun removeFocus(view: View) {
-        view.isFocusable = false
-        view.isClickable = false
-        view.isFocusableInTouchMode = false
-        view.clearFocus()
-    }
-
-    private fun addFocus(view: View) {
-        view.isFocusable = true
-        view.isClickable = true
-        view.isFocusableInTouchMode = true
-        view.requestFocus()
-    }
-
     open inner class BaseCurrencyViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        var iconView: ImageView = view.findViewById(R.id.icon)
-        var nameView: TextView = view.findViewById(R.id.name)
+        private var iconView: ImageView = view.findViewById(R.id.icon)
+        private var nameView: TextView = view.findViewById(R.id.name)
+        private var fullNameView: TextView = view.findViewById(R.id.full_name)
         var valueView: EditText = view.findViewById(R.id.value)
 
         fun bind(currency: Currency, position: Int) {
             valueView.tag = position
             nameView.text = currency.name
-            if (currency.name != "EUR") {
-                Glide.with(recyclerView.context)
-                        .load("https://www.ecb.europa.eu/shared/img/flags/${currency.name}.gif")
-                        .listener(null)
-                        .into(iconView)
-            }
+            fullNameView.text = names[currency.name]
+            Glide.with(recyclerView.context)
+                    .load("https://raw.githubusercontent.com/transferwise/currency-flags/master/src/flags/${currency.name.toLowerCase()}.png")
+                    .listener(null)
+                    .apply(RequestOptions.circleCropTransform())
+                    .into(iconView)
         }
     }
 
@@ -121,31 +108,24 @@ class CurrencyAdapter(
 
     override fun getItemCount() = items.size
 
-    fun updateDataSet(data: MutableList<Currency>) {
-        Observable.just(data)
-                .map { it.apply { it.add(0, currentItem) } }
-                .map { Pair(data, DiffUtil.calculateDiff(MyDiffCallback(it, this.items))) }
-                .doOnNext { items.clear() }
-                .doOnNext { items.addAll(it.first) }
-                .applySchedulers()
-                .subscribe({
-                    it.second.dispatchUpdatesTo(this)
-                })
+    fun updateDataSet(data: MutableList<Currency>, diffResult: DiffUtil.DiffResult) {
+        currentItem = data[0]
+        items.clear()
+        items.addAll(data)
+        diffResult.dispatchUpdatesTo(this)
     }
 
     override fun onTouch(p0: View, p1: MotionEvent): Boolean {
         if (p1.action == MotionEvent.ACTION_UP) {
-            val index = p0.tag as Int
-            val item = items[index]
+            val currentIndex = 0
+            val clickIndex = p0.tag as Int
+            val item = items[clickIndex]
             if (item.name != currentItem.name) {
-                items.removeAt(index)
-                items.add(index, currentItem)
+                Collections.swap(items, currentIndex, clickIndex)
                 currentItem = item
-                items.add(0, item)
-                listener?.onIemSelected(index, item)
-                notifyItemMoved(index, 0)
+                listener?.onIemSelected(clickIndex, item)
+                notifyItemMoved(clickIndex, currentIndex)
             }
-            return false
         }
         return false
     }

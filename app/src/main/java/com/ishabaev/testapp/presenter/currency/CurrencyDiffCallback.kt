@@ -4,7 +4,7 @@ import android.support.v7.util.DiffUtil
 
 import com.ishabaev.testapp.model.Currency
 
-class MyDiffCallback(
+class CurrencyDiffCallback(
         private val newItems: List<Currency>,
         private val oldItems: List<Currency>
 ) : DiffUtil.Callback() {

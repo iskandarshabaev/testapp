@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.view.View
 import com.ishabaev.testapp.presenter.BasePresenter
-import com.ishabaev.testapp.presenter.PresenterStorage
+import com.ishabaev.testapp.presenter.PresenterRepository
 
 abstract class BaseFragment<V : BaseView, out P : BasePresenter<V>> : Fragment() {
 
@@ -15,8 +15,10 @@ abstract class BaseFragment<V : BaseView, out P : BasePresenter<V>> : Fragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        _presenter = (PresenterStorage.getPresenter(fragmentTag) as P?) ?:
-                onCreatePresenter(savedInstanceState)
+        _presenter = (PresenterRepository.getPresenter(fragmentTag) as P?) ?:
+                onCreatePresenter(savedInstanceState).also {
+                    PresenterRepository.putPresenter(fragmentTag, it)
+                }
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -30,7 +32,7 @@ abstract class BaseFragment<V : BaseView, out P : BasePresenter<V>> : Fragment()
     }
 
     override fun onDestroy() {
-        if (isDisappearing()) PresenterStorage.removePresenter(fragmentTag)
+        if (isDisappearing()) PresenterRepository.removePresenter(fragmentTag)
         super.onDestroy()
     }
 

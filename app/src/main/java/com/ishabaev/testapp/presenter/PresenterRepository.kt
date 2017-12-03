@@ -1,6 +1,6 @@
 package com.ishabaev.testapp.presenter
 
-object PresenterStorage {
+object PresenterRepository {
     private var presenters = HashMap<String, BasePresenter<*>>()
 
     fun putPresenter(tag: String, presenter: BasePresenter<*>) {
